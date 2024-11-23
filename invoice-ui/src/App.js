@@ -1,51 +1,79 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import ClientForm from './components/ClientForm';
-import InvoiceForm from './components/InvoiceForm';
-import InvoiceList from './components/InvoiceList';
-import ClientList from './components/ClientList';
-import { Navigate } from 'react-router-dom';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import ClientForm from "./components/ClientForm";
+import ClientList from "./components/ClientList";
+import InvoiceForm from "./components/InvoiceForm";
+import InvoiceList from "./components/InvoiceList";
+import { generateInvoice, getClients, getInvoices, registerClient } from "./api";
 
-function App() {
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+const App = () => {
+  const [clients, setClients] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [activePage, setActivePage] = useState("clients");
 
-    const toggleSidebar = () => {
-        setIsSidebarCollapsed(prevState => !prevState);
-    };
+  // Fetch clients from the backend
+  const fetchClients = async () => {
+    try {
+      const response = await getClients();
+      setClients(response.data);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+    }
+  };
 
-    return (
-        <Router>
-            <div style={{ display: 'flex' }}>
-                {/* Left Sidebar */}
-                <nav className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
-                    <button 
-                        onClick={toggleSidebar} 
-                        className="toggleButton"
-                    >
-                        {isSidebarCollapsed ? '>' : '<'}
-                    </button>
-                    <ul className="navList">
-                        <li><Link to="/register-client" className="link">Register Client</Link></li>
-                        <li><Link to="/generate-invoice" className="link">Generate Invoice</Link></li>
-                        <li><Link to="/invoices" className="link">View Invoices</Link></li>
-                        <li><Link to="/clients" className="link">View Clients</Link></li>
-                    </ul>
-                </nav>
+  // Fetch invoices from the backend
+  const fetchInvoices = async () => {
+    try {
+      const response = await getInvoices();
+      setInvoices(response.data);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
+    }
+  };
 
-                {/* Main Content Area */}
-                <div className="mainContent">
-                    <Routes>
-                        <Route path="/" element={<Navigate to="/invoices" />} />
-                        <Route path="/register-client" element={<ClientForm />} />
-                        <Route path="/generate-invoice" element={<InvoiceForm />} />
-                        <Route path="/invoices" element={<InvoiceList />} />
-                        <Route path="/clients" element={<ClientList />} />
-                    </Routes>
-                </div>
-            </div>
-        </Router>
-    );
-}
+  useEffect(() => {
+    fetchClients();
+    fetchInvoices();
+  }, []);
+
+  const addClient = async (client) => {
+    try {
+      const response = await registerClient(client);
+      setClients([...clients, response.data]);
+    } catch (error) {
+      console.error("Error registering client:", error);
+    }
+  };
+
+  const addInvoice = async (invoice) => {
+    try {
+      const response = await generateInvoice(invoice.clientId, invoice);
+      setInvoices([...invoices, response.data]);
+    } catch (error) {
+      console.error("Error generating invoice:", error);
+    }
+  };
+
+  return (
+    <div style={{ fontFamily: "Arial, sans-serif", padding: "20px" }}>
+      <h1>Invoice App</h1>
+      <div style={{ marginBottom: "20px" }}>
+        <button onClick={() => setActivePage("clients")}>Manage Clients</button>
+        <button onClick={() => setActivePage("invoices")}>Manage Invoices</button>
+      </div>
+      {activePage === "clients" && (
+        <div>
+          <ClientForm addClient={addClient} />
+          <ClientList clients={clients} />
+        </div>
+      )}
+      {activePage === "invoices" && (
+        <div>
+          <InvoiceForm clients={clients} addInvoice={addInvoice} />
+          <InvoiceList invoices={invoices} />
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default App;

@@ -1,50 +1,58 @@
-import React, { useState } from 'react';
-import { registerClient } from '../api';
+import React, { useState } from "react";
 
-const ClientForm = () => {
-    const [client, setClient] = useState({ name: '', address: '', email: '' });
+const ClientForm = ({ onRegister }) => {
+  const [clientData, setClientData] = useState({
+    name: "",
+    address: "",
+    email: "",
+  });
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await registerClient(client);
-            alert('Client registered successfully');
-            setClient({ name: '', address: '', email: '' });
-        } catch (err) {
-            console.error(err);
-            alert('Error registering client');
-        }
-    };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setClientData({ ...clientData, [name]: value });
+  };
 
-    return (
-        <div>
-            <h2>Register Client</h2>
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    placeholder="Name"
-                    value={client.name}
-                    onChange={(e) => setClient({ ...client, name: e.target.value })}
-                    required
-                />
-                <input
-                    type="text"
-                    placeholder="Address"
-                    value={client.address}
-                    onChange={(e) => setClient({ ...client, address: e.target.value })}
-                    required
-                />
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={client.email}
-                    onChange={(e) => setClient({ ...client, email: e.target.value })}
-                    required
-                />
-                <button type="submit">Register</button>
-            </form>
-        </div>
-    );
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onRegister(clientData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h2>Register Client</h2>
+      <div>
+        <label>Name:</label>
+        <input
+          type="text"
+          name="name"
+          value={clientData.name}
+          onChange={handleChange}
+          required
+        />
+      </div>
+      <div>
+        <label>Address:</label>
+        <input
+          type="text"
+          name="address"
+          value={clientData.address}
+          onChange={handleChange}
+          required
+        />
+      </div>
+      <div>
+        <label>Email:</label>
+        <input
+          type="email"
+          name="email"
+          value={clientData.email}
+          onChange={handleChange}
+          required
+        />
+      </div>
+      <button type="submit">Register Client</button>
+    </form>
+  );
 };
 
 export default ClientForm;
